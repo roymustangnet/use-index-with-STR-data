@@ -124,6 +124,18 @@ STR_LIST_DIST = [[D8S1179_LIST, D8S1179_DIST],
                  [PentaE_LIST , PentaE_DIST],
                  [PentaD_LIST , PentaD_DIST]]
 
+# 根据STR的名称，以一定的概率生成对应的STR值
+def generateSTR(str_name):
+  strs = {'D8S1179':0, 'D21S11':1, 'D7S820':2,
+          'CSF1PO':3, 'D3S1358':4, 'TH01':5,
+          'D13S317':6, 'D16S539':7, 'D2S1338':8,
+          'D19S433':9, 'vWA':10, 'TPOX':11,
+          'D18S51':12, 'AMEL':13, 'D5S818':14,
+          'FGA':15, 'PentaE':16, 'PentaD':17}
+  # STR的数据值和其概率分布
+  str_pair = STR_LIST_DIST[strs[str_name]]
+  return random_pick(str_pair[0], str_pair[1])
+
 # 生成STR数据，并存储到CSV文件中
 def generate_csv_data():
   title = ["D8S1179", "D21S11", "D7S820",
@@ -139,12 +151,9 @@ def generate_csv_data():
     block = []
     for i in range(10000):
       vlist = []
-      for str_item in STR_LIST_DIST:
-          str_values = str_item[0]
-          str_probil = str_item[1]
-          # 生成“13/14”这种格式的数据
-          str_value = str(random_pick(str_values, str_probil)) + "/" +str(random_pick(str_values, str_probil))
-          vlist.append(str_value)
+      for str_name in title:
+        str_value = "{}/{}".format(generateSTR(str_name),generateSTR(str_name))
+        vlist.append(str_value)
       line = ",".join(vlist)
       block.append(line)
     
@@ -156,6 +165,12 @@ def generate_csv_data():
 def generate_DB_data():
   conn = mysql.connector.connect(host='127.0.0.1', user='root', password='', database='dnatest', use_unicode=True)
   cursor = conn.cursor()
+  title = ["D8S1179", "D21S11", "D7S820",
+      "CSF1PO", "D3S1358", "TH01",
+      "D13S317", "D16S539", "D2S1338", 
+      "D19S433", "vWA", "TPOX",
+      "D18S51", "AMEL", "D5S818",
+      "FGA", "PentaE", "PentaD"]
   sql = """
       INSERT INTO STR (D8S1179_1, D8S1179_2, D21S11_1, D21S11_2, D7S820_1, D7S820_2,
       CSF1PO_1, CSF1PO_2, D3S1358_1, D3S1358_2, TH01_1, TH01_2,
@@ -170,25 +185,23 @@ def generate_DB_data():
       %s,%s,%s,%s,%s,%s,
       %s,%s,%s,%s,%s,%s)
   """  
-
   for cycle in range(46):
       values_lists = []
       for i in range(10000):
         vlist = []
-        for str_item in STR_LIST_DIST:
-          str_values = str_item[0]
-          str_probil = str_item[1]
-          vlist.append( "{}".format(random_pick(str_values, str_probil)))
-          vlist.append( "{}".format(random_pick(str_values, str_probil)))
+        for str_name in title:
+          # 生成两个数据
+          vlist.append("{}".format(generateSTR(str_name)))
+          vlist.append("{}".format(generateSTR(str_name)))
         values_lists.append(vlist)
       cursor.executemany(sql, values_lists)
       conn.commit()
-
   if cursor is not None:
       cursor.close()
   if conn is not None:
       conn.close()
 
+# 生成STR数据，并保存到数据库和CSV文件中
 def generate_csv_db_data():
   title = ["D8S1179", "D21S11", "D7S820",
       "CSF1PO", "D3S1358", "TH01",
@@ -223,15 +236,12 @@ def generate_csv_db_data():
       for i in range(10000):
         vlist = []
         vlist2 = []
-        for str_item in STR_LIST_DIST:
-          str_values = str_item[0]
-          str_probil = str_item[1]
-          # 生成成对的STR数据，命名为v1和v2
-          v1 = random_pick(str_values, str_probil)
-          v2 = random_pick(str_values, str_probil)
+        for str_name in title:
+          v1 = generateSTR(str_name)
+          v2 = generateSTR(str_name)
           vlist.append( "{}".format(v1))
           vlist.append( "{}".format(v2))
-          str_value = str(v1) + "/" +str(v2) #"13/14"形式的STR数据
+          str_value = "{}/{}".format(v1,v2) #"13/14"形式的STR数据
           vlist2.append(str_value)
         values_lists.append(vlist)
         # 生成1行的STR数据
@@ -249,6 +259,8 @@ def generate_csv_db_data():
       cursor.close()
   if conn is not None:
       conn.close()
+
+
 
 if __name__ == '__main__':
   generate_csv_db_data()
