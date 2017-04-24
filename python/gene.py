@@ -2,7 +2,7 @@
 
 import random
 import mysql.connector
-
+from main import generateSTR
 # 每个表中记录数
 ROW_COUNTS = 50
 
@@ -29,6 +29,7 @@ for table in TABLE_NAME_LIST:
     cursor.execute(sql)
 conn.commit()
 
+# 插入随机数据已经改为用SQL语句直接导入数据库，在./DB/insert_data.sql中
 # # 插入随机数据
 # conn.autocommit = False
 # for table in TABLE_NAME_LIST:
